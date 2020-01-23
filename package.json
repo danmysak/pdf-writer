@@ -1,0 +1,34 @@
+{
+  "name": "pdf-writer",
+  "version": "1.0.0",
+  "description": "Overlays text on PDFs.",
+  "main": "src/index.js",
+  "bin": {
+    "pdf-writer": "./src/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danmysak/pdf-writer.git"
+  },
+  "keywords": [
+    "PDF",
+    "generator",
+    "text",
+    "labels",
+    "overlay"
+  ],
+  "author": "Danylo Mysak <danmysak@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danmysak/pdf-writer/issues"
+  },
+  "homepage": "https://github.com/danmysak/pdf-writer#readme",
+  "dependencies": {
+    "nonvalid": "^1.0.2",
+    "pdfkit": "^0.10.0",
+    "yargs": "^15.0.2"
+  }
+}

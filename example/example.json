@@ -1,0 +1,61 @@
+{
+  "format": {
+    "width": 297,
+    "height": 210
+  },
+  "textPresets": {
+    "regularText": {
+      "font": "fonts/NotoSans-Regular.ttf",
+      "fontSize": 14
+    },
+    "centeredTitle": {
+      "font": "fonts/NotoSans-Bold.ttf",
+      "fontSize": 32,
+      "label": "Hello!",
+      "align": "center",
+      "verticalAlign": "middle"
+    }
+  },
+  "files": [
+    {
+      "text": [{
+        "preset": "centeredTitle"
+      }],
+      "output": "output/hello.pdf"
+    },
+    {
+      "text": [{
+        "font": "fonts/NotoSans-Regular.ttf",
+        "fontSize": 20,
+        "label": "I’m a top-right label",
+        "align": "right",
+        "verticalAlign": "top",
+        "x": 0.9,
+        "y": 0.1
+      }, {
+        "font": "fonts/NotoSans-Regular.ttf",
+        "fontSize": 20,
+        "label": "I’m a bottom-left label",
+        "align": "left",
+        "verticalAlign": "bottom",
+        "x": 0.1,
+        "y": 0.9
+      }],
+      "output": "output/corners.pdf"
+    },
+    {
+      "format": {
+        "width": 412
+      },
+      "text": [{
+        "preset": "regularText",
+        "label": "The Portable Document Format (PDF) is a file format developed by Adobe in the 1990s to present documents, including text formatting and images, in a manner independent of application software, hardware, and operating systems.",
+        "verticalAlign": "top",
+        "y": 0.2,
+        "width": 0.5
+      }],
+      "output": "output/pre.pdf",
+      "postprocess": "qpdf underlay/template.pdf --overlay $output -- output/post.pdf"
+    }
+  ]
+}
