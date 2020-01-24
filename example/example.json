@@ -52,7 +52,16 @@
         "label": "The Portable Document Format (PDF) is a file format developed by Adobe in the 1990s to present documents, including text formatting and images, in a manner independent of application software, hardware, and operating systems.",
         "verticalAlign": "top",
         "y": 0.2,
-        "width": 0.5
+        "width": 0.5,
+        "lineGap": 0.01
+      }, {
+        "preset": "regularText",
+        "label": "PDF = ",
+        "verticalAlign": "middle"
+      }, {
+        "continuation": true,
+        "font": "fonts/NotoSans-Bold.ttf",
+        "label": "cool"
       }],
       "output": "output/pre.pdf",
       "postprocess": "qpdf underlay/template.pdf --overlay $output -- output/post.pdf"

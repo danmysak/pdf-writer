@@ -48,51 +48,70 @@ function formatToPdfKit(format) {
     };
 }
 
+function labelInfoToParams(labelInfo, presets, lastEntry) {
+    const preset = labelInfo.preset ? presets[labelInfo.preset] : {};
+    const align = labelInfo.align || preset.align || A.HALIGN.CENTER;
+    const verticalAlign = labelInfo.verticalAlign || preset.verticalAlign || A.VALIGN.MIDDLE;
+    const continuation = labelInfo.continuation || preset.continuation || false;
+    const geometry = continuation ? {} : {
+        align,
+        verticalAlign,
+        x: labelInfo.x || preset.x || A.COORDS.HALIGN[align],
+        y: labelInfo.y || preset.y || A.COORDS.VALIGN[verticalAlign],
+        width: labelInfo.width || preset.width || null,
+        lineGap: labelInfo.lineGap || preset.lineGap || 0
+    };
+    return {
+        continuation,
+        font: labelInfo.font || preset.font || continuation && lastEntry.font,
+        fontSize: labelInfo.fontSize || preset.fontSize || continuation && lastEntry.fontSize,
+        label: labelInfo.label || preset.label,
+        ...geometry
+    };
+}
+
+function outputBlock(doc, block) {
+    const totalWidth = block.labels.reduce((p, l) => p + l.effectiveWidth, 0);
+    let x = {
+        [A.HALIGN.LEFT]: block.x,
+        [A.HALIGN.CENTER]: block.x - totalWidth / 2,
+        [A.HALIGN.RIGHT]: block.x - totalWidth
+    }[block.align];
+    for (const {label, font, fontSize, effectiveWidth, effectiveHeight} of block.labels) {
+        const y = {
+            [A.VALIGN.TOP]: block.y,
+            [A.VALIGN.MIDDLE]: block.y - effectiveHeight / 2,
+            [A.VALIGN.BOTTOM]: block.y - effectiveHeight
+        }[block.verticalAlign];
+        doc.font(font).fontSize(fontSize);
+        doc.text(label, x, y, {width: effectiveWidth, ...block.extraParams});
+        x += effectiveWidth;
+    }
+}
+
 function createDoc(text, format, presets) {
     const doc = new PDFDocument(format);
-    for (const labelInfo of text) {
-        const preset = labelInfo.preset ? presets[labelInfo.preset] : {};
-        const font = labelInfo.font || preset.font;
-        const fontSize = labelInfo.fontSize || preset.fontSize;
-        const label = labelInfo.label || preset.label;
-        const align = labelInfo.align || preset.align || A.HALIGN.CENTER;
-        const verticalAlign = labelInfo.verticalAlign || preset.verticalAlign || A.VALIGN.MIDDLE;
-        const x = labelInfo.x || preset.x || A.COORDS.HALIGN[align];
-        const y = labelInfo.y || preset.y || A.COORDS.VALIGN[verticalAlign];
-        const width = labelInfo.width || preset.width || null;
-        doc.fontSize(fontSize).font(font);
-        const scaledX = x * doc.page.width, scaledY = y * doc.page.height;
-        const scaledWidth = width === null ? null : width * doc.page.width;
-        let x0, x1, y0;
-        switch (align) {
-            case A.HALIGN.LEFT:
-                x0 = scaledX;
-                x1 = doc.page.width;
-                break;
-            case A.HALIGN.RIGHT:
-                x0 = 0;
-                x1 = scaledX;
-                break;
-            case A.HALIGN.CENTER:
-                const actualWidth = scaledWidth || 2 * Math.min(scaledX, doc.page.width - scaledX);
-                x0 = scaledX - actualWidth / 2;
-                x1 = scaledX + actualWidth / 2;
-                break;
+    const blocks = [];
+    let lastParams = null;
+    for (let i = 0; i < text.length; i++) {
+        lastParams = labelInfoToParams(text[i], presets, lastParams);
+        const {continuation, font, fontSize, label, align, verticalAlign, x, y, width, lineGap} = lastParams;
+        doc.font(font).fontSize(fontSize);
+        const extraParams = {lineGap: lineGap * doc.page.height};
+        const actualWidth = doc.widthOfString(label, extraParams);
+        const effectiveWidth = width ? Math.min(width * doc.page.width, actualWidth) : actualWidth;
+        const effectiveHeight = doc.heightOfString(label, {width: effectiveWidth, ...extraParams});
+        const labelParams = {label, font, fontSize, effectiveWidth, effectiveHeight};
+        if (continuation) {
+            blocks[blocks.length - 1].labels.push(labelParams);
+        } else {
+            blocks.push({
+                align, verticalAlign, x: x * doc.page.width, y: y * doc.page.height, extraParams,
+                labels: [labelParams]
+            });
         }
-        const actualHeight = doc.heightOfString(label, {width: x1 - x0});
-        switch (verticalAlign) {
-            case A.VALIGN.TOP:
-                y0 = scaledY;
-                break;
-            case A.VALIGN.BOTTOM:
-                y0 = scaledY - actualHeight;
-                break;
-            case A.VALIGN.MIDDLE:
-                y0 = scaledY - actualHeight / 2;
-                break;
-        }
-        doc.text(label, x0, y0, {align, width: x1 - x0});
     }
+    blocks.forEach(block => outputBlock(doc, block));
     doc.end();
     return doc;
 }
@@ -101,7 +120,6 @@ async function go() {
     const json = readJson();
     const defaultFormat = json.format || {};
     const textPresets = json.textPresets || {};
-
     for (let index = 0; index < json.files.length; index++) {
         const fileInfo = json.files[index];
         console.log(`Processing file ${index + 1} of ${json.files.length}...`);
