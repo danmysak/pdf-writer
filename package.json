@@ -1,6 +1,6 @@
 {
   "name": "pdf-writer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Overlays text on PDFs.",
   "main": "src/index.js",
   "bin": {
