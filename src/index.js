@@ -98,7 +98,7 @@ function createDoc(text, format, presets) {
         const {continuation, font, fontSize, label, align, verticalAlign, x, y, width, lineGap} = lastParams;
         doc.font(font).fontSize(fontSize);
         const extraParams = {lineGap: lineGap * doc.page.height};
-        const actualWidth = doc.widthOfString(label, extraParams) * (1 + 10e-6); // Otherwise a rounding error may occur
+        const actualWidth = doc.widthOfString(label, extraParams) * (1 + 10e-3); // Otherwise a rounding error may occur
         const effectiveWidth = width ? Math.min(width * doc.page.width, actualWidth) : actualWidth;
         const effectiveHeight = doc.heightOfString(label, {width: effectiveWidth, ...extraParams});
         const labelParams = {label, font, fontSize, effectiveWidth, effectiveHeight};
